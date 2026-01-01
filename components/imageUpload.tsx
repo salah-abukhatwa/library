@@ -19,9 +19,16 @@ async function getAuth(): Promise<AuthResponse> {
   return res.json();
 }
 
-export default function ImageUpload() {
+type ImageUploadProps = {
+  value?: string;
+  onChange: (url: string) => void;
+};
+
+export default function ImageUpload({
+  value = "",
+  onChange,
+}: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
 
   const openPicker = () => inputRef.current?.click();
@@ -31,8 +38,6 @@ export default function ImageUpload() {
     if (!file) return;
 
     setIsUploading(true);
-
-    // Optional: show loading toast
     const toastId = toast.loading("Uploading image...");
 
     try {
@@ -47,26 +52,24 @@ export default function ImageUpload() {
         publicKey,
       });
 
-      // Depending on your version, result may include url/filePath/etc
-      // @ts-ignore
+      // @ts-ignore (depends on typings)
       const url = result?.url ?? "";
-      setUploadedUrl(url);
+
+      if (!url) throw new Error("Upload succeeded but no URL returned.");
+
+      onChange(url);
 
       toast.success("Image uploaded successfully", {
-        id: toastId, // updates the loading toast
+        id: toastId,
         description: file.name,
       });
     } catch (err: any) {
-      console.error(err);
-
       toast.error("Upload failed", {
-        id: toastId, // updates the loading toast
+        id: toastId,
         description: err?.message ?? "Something went wrong",
       });
     } finally {
       setIsUploading(false);
-
-      // Optional: allow uploading the same file again
       if (inputRef.current) inputRef.current.value = "";
     }
   };
@@ -84,22 +87,23 @@ export default function ImageUpload() {
       <button type="button" onClick={openPicker} disabled={isUploading}>
         {isUploading ? "Uploading..." : "Choose image"}
       </button>
-      {uploadedUrl && (
+
+      {value && (
         <div style={{ marginTop: 12 }}>
           <img
-            src={uploadedUrl}
+            src={value}
             alt="Uploaded"
             style={{
-              width: 220,
-              height: 220,
-              objectFit: "cover",
+              width: 320,
+              height: 180,
+              objectFit: "contain",
               borderRadius: 12,
+              background: "rgba(0,0,0,0.2)",
             }}
           />
+          <p className="break-all text-sm mt-2">{value}</p>
         </div>
       )}
-
-      {uploadedUrl && <p className="break-all text-sm">{uploadedUrl}</p>}
     </ImageKitProvider>
   );
 }

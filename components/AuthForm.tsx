@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import {
   DefaultValues,
   FieldValues,
@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { FIELD_NAMES, FIELD_TYPES } from "@/app/constants";
 import ImageUpload from "./imageUpload";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface AuthFormProps<T extends FieldValues> {
   schema: ZodType<T>;
@@ -39,13 +41,31 @@ const AuthForm = <T extends FieldValues>({
   defaultValues,
   onSubmit,
 }: AuthFormProps<T>) => {
+  const router = useRouter();
   const isSignIn = type === "SIGN_IN";
   const form: UseFormReturn<T> = useForm<T>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as DefaultValues<T>,
   });
 
-  const handleSubmit: SubmitHandler<T> = async (data) => {};
+  const handleSubmit: SubmitHandler<T> = async (data) => {
+    const result = await onSubmit(data);
+
+    if (result.success) {
+      toast.success(
+        isSignIn ? "Successfully signed in!" : "Account created successfully!",
+        {
+          description: result.message,
+        }
+      );
+      router.push("/");
+    } else {
+      toast.error(isSignIn ? "Sign in failed" : "Sign up failed", {
+        description:
+          result.message || "Something went wrong. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,7 +95,10 @@ const AuthForm = <T extends FieldValues>({
                   </FormLabel>
                   <FormControl>
                     {field.name === "universityCard" ? (
-                      <ImageUpload />
+                      <ImageUpload
+                        value={(field.value as string) ?? ""}
+                        onChange={(url) => field.onChange(url)}
+                      />
                     ) : (
                       <Input
                         required

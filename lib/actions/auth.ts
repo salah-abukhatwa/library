@@ -9,6 +9,8 @@ import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import ratelimit from "../ratelimit";
 import { redirect } from "next/navigation";
+import { workflowClient } from "../workflow";
+import config from "@/lib/config";
 
 export const signInWithCredentials = async (
   params: Pick<AuthCredentials, "email" | "password">
@@ -42,7 +44,6 @@ export const signUp = async (params: AuthCredentials) => {
   const { success } = await ratelimit.limit(ip);
   if (!success) return redirect("/too-fast");
 
-  //check if user already exists
   const existingUser = await db
     .select()
     .from(users)
@@ -50,7 +51,7 @@ export const signUp = async (params: AuthCredentials) => {
     .limit(1);
 
   if (existingUser.length > 0) {
-    return { success: false, error: "User already exists" };
+    return { success: false, message: "User already exists" };
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -60,15 +61,23 @@ export const signUp = async (params: AuthCredentials) => {
       fullName,
       email,
       password: hashedPassword,
-      universityId,
+      universityId: Number(universityId), // IMPORTANT if your schema is integer
       universityCard,
     });
 
+    // ✅ IMPORTANT: this URL must be PUBLIC in production (Vercel domain)
+    await workflowClient.trigger({
+      url: `${config.env.appUrl}/api/workflow`,
+
+      body: { email, fullName },
+    });
+
+    // optional auto sign-in
     await signInWithCredentials({ email, password });
 
-    return { success: true };
+    return { success: true, message: "Account created" };
   } catch (error) {
     console.log(error, "Signup error");
-    return { success: false, error: "Signup failed" };
+    return { success: false, message: "Signup failed" };
   }
 };

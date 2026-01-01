@@ -1,45 +1,101 @@
+// app/api/workflow/route.ts
 import { serve } from "@upstash/workflow/nextjs";
+import config from "@/lib/config";
+import { db } from "@/database/drizzle";
+import { users } from "@/database/schema";
+import { eq } from "drizzle-orm";
+
+export const runtime = "nodejs";
 
 type InitialData = {
   email: string;
+  fullName?: string;
 };
 
 export const { POST } = serve<InitialData>(async (context) => {
-  const { email } = context.requestPayload;
+  const { email, fullName } = context.requestPayload;
 
-  await context.run("new-signup", async () => {
-    await sendEmail("Welcome to the platform", email);
+  // 1) Welcome email
+  await context.run("send-welcome-email", async () => {
+    await sendResendEmail(context, {
+      to: email,
+      subject: "Welcome to NextLibrary 👋",
+      html: `
+        <div style="font-family:Arial,sans-serif">
+          <h2>Welcome${fullName ? `, ${fullName}` : ""}!</h2>
+          <p>Your account was created successfully.</p>
+        </div>
+      `,
+    });
   });
 
-  await context.sleep("wait-for-3-days", 60 * 60 * 24 * 3);
+  // 2) Wait 3 days
+  await context.sleep("wait-3-days", 60 * 60 * 24 * 3);
 
-  while (true) {
-    const state = await context.run("check-user-state", async () => {
-      return await getUserState();
+  // 3) Check if user was active recently (based on lastActivityDate)
+  const isActive = await context.run("check-user-activity", async () => {
+    const result = await db
+      .select({ lastActivityDate: users.lastActivityDate })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    const last = result[0]?.lastActivityDate;
+    if (!last) return false;
+
+    // last is usually "YYYY-MM-DD"
+    const lastDate = new Date(`${last}T00:00:00Z`);
+
+    const diffDays = (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+
+    return diffDays < 3;
+  });
+
+  // 4) Follow-up only if non-active
+  if (!isActive) {
+    await context.run("send-followup-email", async () => {
+      await sendResendEmail(context, {
+        to: email,
+        subject: "Still there? 🙂",
+        html: `
+          <div style="font-family:Arial,sans-serif">
+            <p>We noticed you haven’t been active lately.</p>
+            <p>Come back and explore the Library page!</p>
+          </div>
+        `,
+      });
     });
-
-    if (state === "non-active") {
-      await context.run("send-email-non-active", async () => {
-        await sendEmail("Email to non-active users", email);
-      });
-    } else if (state === "active") {
-      await context.run("send-email-active", async () => {
-        await sendEmail("Send newsletter to active users", email);
-      });
-    }
-
-    await context.sleep("wait-for-1-month", 60 * 60 * 24 * 30);
   }
 });
 
-async function sendEmail(message: string, email: string) {
-  // Implement email sending logic here
-  console.log(`Sending ${message} email to ${email}`);
+async function sendResendEmail(
+  context: any,
+  params: { to: string; subject: string; html: string }
+) {
+  const token = config.env.resend.apiKey;
+  const from = config.env.resend.from;
+
+  if (!token) throw new Error("Missing RESEND_API_KEY");
+  if (!from) throw new Error("Missing RESEND_FROM");
+
+  const { status, body } = await context.api.resend.call("resend-send-email", {
+    token,
+    body: {
+      from,
+      to: [params.to],
+      subject: params.subject,
+      html: params.html,
+    },
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+
+  if (status >= 400) {
+    throw new Error(
+      `Resend failed: status=${status}, body=${JSON.stringify(body)}`
+    );
+  }
+
+  return body;
 }
-
-type UserState = "non-active" | "active";
-
-const getUserState = async (): Promise<UserState> => {
-  // Implement user state logic here
-  return "non-active";
-};

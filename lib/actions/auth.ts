@@ -67,7 +67,7 @@ export const signUp = async (params: AuthCredentials) => {
 
     // ✅ IMPORTANT: this URL must be PUBLIC in production (Vercel domain)
     await workflowClient.trigger({
-      url: `${config.env.appUrl}/api/workflow`,
+      url: `https://library-inky-five.vercel.app/api/workflow`,
 
       body: { email, fullName },
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
 import {
   DefaultValues,
   FieldValues,
@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { FIELD_NAMES, FIELD_TYPES } from "@/app/constants";
-import ImageUpload from "./imageUpload";
+import FileUpload from "./FileUpload";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -43,6 +42,7 @@ const AuthForm = <T extends FieldValues>({
 }: AuthFormProps<T>) => {
   const router = useRouter();
   const isSignIn = type === "SIGN_IN";
+
   const form: UseFormReturn<T> = useForm<T>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as DefaultValues<T>,
@@ -54,9 +54,7 @@ const AuthForm = <T extends FieldValues>({
     if (result.success) {
       toast.success(
         isSignIn ? "Successfully signed in!" : "Account created successfully!",
-        {
-          description: result.message,
-        }
+        { description: result.message }
       );
       router.push("/");
     } else {
@@ -72,32 +70,40 @@ const AuthForm = <T extends FieldValues>({
       <h1 className="text-2xl font-semibold text-white">
         {isSignIn ? "Welcome back to NextLibrary" : "Create an account"}
       </h1>
+
       <p className="text-light-100">
         {isSignIn
           ? "Access the vast collection of resources, and stay updated."
           : "Please complete all fields and upload a valid university ID to gain access to the library."}
       </p>
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
           className="space-y-6 w-full"
         >
-          {Object.keys(defaultValues).map((field) => (
+          {Object.keys(defaultValues).map((key) => (
             <FormField
-              key={field}
+              key={key}
               control={form.control}
-              name={field as Path<T>}
+              name={key as Path<T>}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="capitalize">
                     {FIELD_NAMES[field.name as keyof typeof FIELD_NAMES] ||
                       field.name}
                   </FormLabel>
+
                   <FormControl>
                     {field.name === "universityCard" ? (
-                      <ImageUpload
+                      <FileUpload
+                        type="image"
+                        accept="image/*"
+                        placeholder="Upload your university card"
+                        folder="/users/university-cards"
+                        variant="dark"
                         value={(field.value as string) ?? ""}
-                        onChange={(url) => field.onChange(url)}
+                        onFileChange={(url) => field.onChange(url)}
                       />
                     ) : (
                       <Input
@@ -122,6 +128,7 @@ const AuthForm = <T extends FieldValues>({
           </Button>
         </form>
       </Form>
+
       <p className="text-center text-base font-medium">
         {isSignIn ? "New to NextLibrary? " : "Already have an account? "}
         <Link

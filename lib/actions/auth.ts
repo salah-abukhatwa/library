@@ -66,11 +66,12 @@ export const signUp = async (params: AuthCredentials) => {
     });
 
     // ✅ IMPORTANT: this URL must be PUBLIC in production (Vercel domain)
-    await workflowClient.trigger({
-      url: `${config.env.appUrl}/api/workflow`,
-
-      body: { email, fullName },
-    });
+    if (process.env.NODE_ENV === "production") {
+      await workflowClient.trigger({
+        url: `${config.env.appUrl}/api/workflow`,
+        body: { email, fullName },
+      });
+    }
 
     // optional auto sign-in
     await signInWithCredentials({ email, password });

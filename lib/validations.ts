@@ -23,8 +23,9 @@ export const bookSchema = z.object({
   coverUrl: z.string().nonempty(),
   coverColor: z
     .string()
-    .trim()
-    .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/),
+    .min(4)
+    .regex(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/, "Invalid hex color"),
+
   videoUrl: z.string().nonempty(),
   summary: z.string().trim().min(10),
 });

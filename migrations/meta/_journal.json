@@ -8,6 +8,13 @@
       "when": 1766466600923,
       "tag": "0000_amazing_the_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768233359930,
+      "tag": "0001_cynical_madrox",
+      "breakpoints": true
     }
   ]
 }

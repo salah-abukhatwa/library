@@ -24,7 +24,7 @@ const BookCover = ({
   className,
   coverColor = "#012B4",
   coverImage = "https://placehold.co/400x600.png",
-  variant = "default",
+  variant = "regular",
 }: Props) => {
   return (
     <div
@@ -44,6 +44,7 @@ const BookCover = ({
           alt="Book Cover"
           fill
           className="rounded-sm object-fill"
+          loading="lazy"
         />
       </div>
     </div>

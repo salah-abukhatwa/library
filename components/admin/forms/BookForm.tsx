@@ -1,9 +1,10 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   Form,
   FormControl,
@@ -13,19 +14,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import { bookSchema } from "@/lib/validations";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
-interface AuthFormProps extends Partial<Book> {
-  type?: "creat" | "update";
-}
+import { bookSchema } from "@/lib/validations";
+import FileUpload from "@/components/FileUpload"; // <-- change path if needed
+import ColorPicker from "../ColorPicker";
+import { createBook } from "@/lib/admin/actions/book";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
-  const router = useRouter();
+type BookFormValues = z.infer<typeof bookSchema>;
 
-  const form = useForm<z.infer<typeof bookSchema>>({
+type BookFormProps = {
+  type?: "create" | "update";
+  // optionally later: book?: Partial<BookFormValues>
+};
+
+export default function BookForm({ type = "create" }: BookFormProps) {
+  const form = useForm<BookFormValues>({
     resolver: zodResolver(bookSchema),
     defaultValues: {
       title: "",
@@ -41,14 +48,34 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof bookSchema>) => {};
+  const router = useRouter();
+
+  const onSubmit = async (values: BookFormValues) => {
+    try {
+      const res = await createBook(values as any); // we'll type this properly next step
+
+      if (!res.success) {
+        toast.error("Failed to create book", { description: res.error });
+        return;
+      }
+
+      toast.success("Book created successfully");
+      router.push(`/admin/books/${res.data.id}`);
+      router.refresh();
+    } catch (err: any) {
+      toast.error("Something went wrong", {
+        description: err?.message ?? "Please try again",
+      });
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 ">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Title */}
         <FormField
           control={form.control}
-          name={"title"}
+          name="title"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -56,20 +83,20 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
               </FormLabel>
               <FormControl>
                 <Input
-                  required
                   placeholder="Enter the book title"
                   {...field}
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Author */}
         <FormField
           control={form.control}
-          name={"Author"}
+          name="author"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -77,20 +104,20 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
               </FormLabel>
               <FormControl>
                 <Input
-                  required
                   placeholder="Enter the author name"
                   {...field}
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Genre */}
         <FormField
           control={form.control}
-          name={"Genre"}
+          name="genre"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -98,20 +125,20 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
               </FormLabel>
               <FormControl>
                 <Input
-                  required
-                  placeholder="Enter the genere of the book"
+                  placeholder="Enter the genre of the book"
                   {...field}
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Rating */}
         <FormField
           control={form.control}
-          name={"rating"}
+          name="rating"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -122,19 +149,20 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
                   type="number"
                   min={1}
                   max={5}
-                  placeholder="Book rating"
-                  {...field}
+                  value={field.value ?? 1}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Total copies */}
         <FormField
           control={form.control}
-          name={"Total copies"}
+          name="totalCopies"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -145,47 +173,65 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
                   type="number"
                   min={1}
                   max={10000}
-                  placeholder="Enter the total number of copies"
-                  {...field}
+                  value={field.value ?? 1}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Cover image upload */}
         <FormField
           control={form.control}
-          name={"coverUrl"}
+          name="coverUrl"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
                 Book Image
               </FormLabel>
-              <FormControl>{/*File Upload*/}</FormControl>
-
+              <FormControl>
+                <FileUpload
+                  type="image"
+                  accept="image/*"
+                  placeholder="Upload book cover (max 20MB)"
+                  folder="/books/covers"
+                  variant="light"
+                  value={(field.value as string) ?? ""}
+                  onFileChange={(url) => field.onChange(url)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Cover color (keep as input for now) */}
         <FormField
           control={form.control}
-          name={"coverColor"}
+          name="coverColor"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
                 Primary color
               </FormLabel>
-              <FormControl>{/*Color Picker*/}</FormControl>
-
+              <FormControl>
+                <ColorPicker
+                  value={(field.value as string) || "#000000"}
+                  onChange={(color) => field.onChange(color)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Description */}
         <FormField
           control={form.control}
-          name={"description"}
+          name="description"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -199,28 +245,40 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Trailer upload */}
         <FormField
           control={form.control}
-          name={"videoUrl"}
+          name="videoUrl"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
                 Book Trailer
               </FormLabel>
-              <FormControl>{/*File Upload*/}</FormControl>
-
+              <FormControl>
+                <FileUpload
+                  type="video"
+                  accept="video/*"
+                  placeholder="Upload trailer (max 50MB)"
+                  folder="/books/trailers"
+                  variant="light"
+                  value={(field.value as string) ?? ""}
+                  onFileChange={(url) => field.onChange(url)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Summary */}
         <FormField
           control={form.control}
-          name={"summary"}
+          name="summary"
           render={({ field }) => (
             <FormItem className="flex flex-col gap-1">
               <FormLabel className="text-base font-normal text-dark-500">
@@ -234,17 +292,15 @@ const BookForm = ({ type, ...book }: AuthFormProps<T>) => {
                   className="book-form_input"
                 />
               </FormControl>
-
               <FormMessage />
             </FormItem>
           )}
         />
+
         <Button type="submit" className="book-form_btn text-white">
-          Add Book to Library{" "}
+          {type === "update" ? "Update Book" : "Add Book to Library"}
         </Button>
       </form>
     </Form>
   );
-};
-
-export default BookForm;
+}

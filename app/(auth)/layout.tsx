@@ -19,13 +19,26 @@ const layout = async ({ children }: { children: ReactNode }) => {
         </div>
       </section>
       <section className="auth-illustration">
-        <Image
-          src="/images/auth-illustration.png"
-          alt="Auth Illustration"
-          width={1000}
-          height={1000}
-          className="size-full object-cover"
-        />
+        <div className="relative h-full w-full overflow-hidden">
+          <img
+            src="/images/auth-illustration.png"
+            alt="Library"
+            className="h-full w-full object-cover
+               brightness-[0.85] saturate-[0.85] contrast-[1.05]"
+          />
+
+          {/* Dark/brand overlay */}
+          <div className="absolute inset-0 bg-[#12141D]/35" />
+
+          {/* Extra gradient so it blends with the page */}
+          <div
+            className="absolute inset-0 bg-gradient-to-b
+                  from-[#12141D]/20 via-transparent to-[#12141D]/55"
+          />
+
+          {/* Optional: add a cool tint (nice with navy UI) */}
+          <div className="absolute inset-0 bg-[#24304A]/20 mix-blend-color" />
+        </div>
       </section>
     </main>
   );

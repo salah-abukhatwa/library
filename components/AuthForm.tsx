@@ -25,7 +25,7 @@ import Link from "next/link";
 import { FIELD_NAMES, FIELD_TYPES } from "@/app/constants";
 import FileUpload from "./FileUpload";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface AuthFormProps<T extends FieldValues> {
   schema: ZodType<T>;
@@ -42,6 +42,8 @@ const AuthForm = <T extends FieldValues>({
 }: AuthFormProps<T>) => {
   const router = useRouter();
   const isSignIn = type === "SIGN_IN";
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const form: UseFormReturn<T> = useForm<T>({
     resolver: zodResolver(schema),
@@ -54,9 +56,9 @@ const AuthForm = <T extends FieldValues>({
     if (result.success) {
       toast.success(
         isSignIn ? "Successfully signed in!" : "Account created successfully!",
-        { description: result.message }
+        { description: result.message },
       );
-      router.push("/");
+      router.push(callbackUrl || "/");
     } else {
       toast.error(isSignIn ? "Sign in failed" : "Sign up failed", {
         description:

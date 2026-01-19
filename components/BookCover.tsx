@@ -29,7 +29,7 @@ const BookCover = ({
   return (
     <div
       className={cn(
-        "relative transition-all duration-300",
+        "relative transition-all  duration-300",
         variantStyles[variant],
         className
       )}

@@ -39,10 +39,6 @@ const BookCard = ({
               />
               <p className="text-light-100">11 days left to return</p>
             </div>
-
-            <Button variant="ghost" className="book-btn mt-2">
-              Download receipt
-            </Button>
           </div>
         )}
       </Link>

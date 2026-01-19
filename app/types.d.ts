@@ -11,7 +11,7 @@ interface Book {
   coverUrl: string;
   videoUrl: string;
   summary: string;
-  createdAt: date | null;
+  createdAt: Date | null;
 }
 
 interface AuthCredentials {
@@ -33,5 +33,10 @@ interface BookParams {
   totalCopies: number;
   videoUrl: string;
   summary: string;
-  available_copies: number;
+  availableCopies: number;
+}
+
+interface BorrowBookParams {
+  bookId: string;
+  userId: string;
 }

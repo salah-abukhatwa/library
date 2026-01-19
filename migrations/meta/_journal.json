@@ -15,6 +15,20 @@
       "when": 1768233359930,
       "tag": "0001_cynical_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768399832534,
+      "tag": "0002_sour_war_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1768815418307,
+      "tag": "0003_bright_donald_blake",
+      "breakpoints": true
     }
   ]
 }

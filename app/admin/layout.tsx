@@ -11,7 +11,8 @@ import { db } from "@/database/drizzle";
 const layout = async ({ children }: { children: ReactNode }) => {
   const session = await auth();
 
-  if (!session?.user?.id) redirect("/sign-in");
+  if (!session?.user?.id) redirect("/sign-in?callbackUrl=/admin");
+
   const isAdmin = await db
     .select({ isAdmin: users.role })
     .from(users)

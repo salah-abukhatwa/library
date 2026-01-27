@@ -17,7 +17,7 @@ export default function SearchGrid({
       <div
         className="
            grid grid-cols-2 justify-items-center
-    gap-x-10 gap-y-14
+    gap-x-8 gap-y-14
     sm:gap-x-12 sm:gap-y-16
     md:grid-cols-5 md:justify-items-start md:gap-x-8 md:gap-y-16
         "

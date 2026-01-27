@@ -5,6 +5,7 @@ import { users } from "@/database/schema";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import React from "react";
+
 import { getBorrowedBooks } from "@/lib/actions/borrow";
 import ProfileCard from "@/components/ProfileCard";
 import BorrowedBookCard from "@/components/BorrowedBookCard";
@@ -31,7 +32,7 @@ const Page = async () => {
   const borrowed = (await getBorrowedBooks(user.id)) as BorrowedBook[];
 
   return (
-    <section className="grid grid-cols-1 gap-10 lg:grid-cols-[566px_1fr] lg:gap-12">
+    <section className="grid grid-cols-1 items-start gap-20 lg:grid-cols-[566px_1fr] lg:gap-12">
       {/* Left profile card */}
       <ProfileCard
         fullName={user.fullName}
@@ -41,12 +42,17 @@ const Page = async () => {
       />
 
       {/* Right borrowed books */}
-      <div>
-        <h1 className="text-3xl font-semibold text-light-100">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold text-light-100 sm:text-3xl">
           Borrowed books
         </h1>
 
-        <ul className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2  lg:grid-cols-2 ">
+        <ul
+          className="
+    mt-6 grid gap-6
+    [grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]
+  "
+        >
           {borrowed.map((b) => (
             <BorrowedBookCard key={b.borrowRecordId} book={b} />
           ))}

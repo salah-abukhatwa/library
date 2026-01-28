@@ -15,7 +15,7 @@ const Header = ({ session }: { session: Session }) => {
       </div>
 
       <div className="flex items-center gap-4">
-        <p>Search</p>
+        {/* <p>Search</p> */}
 
         {/* Logout (server action) */}
         <form action={logout}>

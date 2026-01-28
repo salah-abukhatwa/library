@@ -18,9 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 import { bookSchema } from "@/lib/validations";
-import FileUpload from "@/components/FileUpload"; // <-- change path if needed
+import FileUpload from "@/components/FileUpload";
 import ColorPicker from "../ColorPicker";
-import { createBook } from "@/lib/admin/actions/book";
+import { createBook, updateBook } from "@/lib/admin/actions/book";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -28,31 +28,51 @@ type BookFormValues = z.infer<typeof bookSchema>;
 
 type BookFormProps = {
   type?: "create" | "update";
-  // optionally later: book?: Partial<BookFormValues>
+  book?: Partial<Book> & { id?: string }; // passed from edit page
 };
 
-export default function BookForm({ type = "create" }: BookFormProps) {
+export default function BookForm({ type = "create", book }: BookFormProps) {
+  const router = useRouter();
+
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      author: "",
-      genre: "",
-      rating: 1,
-      totalCopies: 1,
-      coverUrl: "",
-      coverColor: "",
-      videoUrl: "",
-      summary: "",
+      title: book?.title ?? "",
+      description: book?.description ?? "",
+      author: book?.author ?? "",
+      genre: book?.genre ?? "",
+      rating: (book?.rating as any) ?? 1,
+      totalCopies: (book?.totalCopies as any) ?? 1,
+      coverUrl: book?.coverUrl ?? "",
+      coverColor: book?.coverColor ?? "#000000",
+      videoUrl: book?.videoUrl ?? "",
+      summary: book?.summary ?? "",
     },
   });
 
-  const router = useRouter();
-
   const onSubmit = async (values: BookFormValues) => {
     try {
-      const res = await createBook(values as any); // we'll type this properly next step
+      if (type === "update") {
+        if (!book?.id) {
+          toast.error("Missing book id");
+          return;
+        }
+
+        const res = await updateBook(book.id, values as any);
+
+        if (!res.success) {
+          toast.error("Failed to update book", { description: res.error });
+          return;
+        }
+
+        toast.success("Book updated successfully");
+        router.push("/admin/books");
+        router.refresh();
+        return;
+      }
+
+      // create
+      const res = await createBook(values as any);
 
       if (!res.success) {
         toast.error("Failed to create book", { description: res.error });
@@ -60,7 +80,7 @@ export default function BookForm({ type = "create" }: BookFormProps) {
       }
 
       toast.success("Book created successfully");
-      router.push(`/admin/books/${res.data.id}`);
+      router.push("/admin/books");
       router.refresh();
     } catch (err: any) {
       toast.error("Something went wrong", {
@@ -208,7 +228,7 @@ export default function BookForm({ type = "create" }: BookFormProps) {
           )}
         />
 
-        {/* Cover color (keep as input for now) */}
+        {/* Cover color */}
         <FormField
           control={form.control}
           name="coverColor"

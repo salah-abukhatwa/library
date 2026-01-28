@@ -1,10 +1,10 @@
 import { db } from "@/database/drizzle";
 import { books } from "@/database/schema";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
-import SearchToolbar from "./SearchToolbar";
-import SearchGrid from "./SearchGrid";
-import SearchEmptyState from "./SearchEmptyState";
-import SearchResultsHeader from "./SearchResultsHeader";
+import SearchToolbar from "../../../components/search/SearchToolbar";
+import SearchGrid from "../../../components/search/SearchGrid";
+import SearchEmptyState from "../../../components/search/SearchEmptyState";
+import SearchResultsHeader from "../../../components/search/SearchResultsHeader";
 
 type PageProps = {
   searchParams?: {

@@ -37,7 +37,7 @@ const Sidebar = ({ session }: { session: Session }) => {
                 <div
                   className={cn(
                     "link",
-                    isSelected && "bg-primary-admin shadow-sm"
+                    isSelected && "bg-primary-admin shadow-sm",
                   )}
                 >
                   <div className="relative size-5">
@@ -45,7 +45,7 @@ const Sidebar = ({ session }: { session: Session }) => {
                       src={link.img}
                       alt="icon"
                       fill
-                      className={`${isSelected}? 'brightness-0 invert' : '' object-contain`}
+                      className={`${isSelected ? "brightness-0 invert" : ""} object-contain`}
                     />
                   </div>
                   <p className={cn(isSelected ? "text-white" : "text-dark")}>

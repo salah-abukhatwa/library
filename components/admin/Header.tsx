@@ -1,6 +1,7 @@
 import { Session } from "next-auth";
-import React from "react";
 import { logout } from "@/lib/actions/auth";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 const Header = ({ session }: { session: Session }) => {
   return (
@@ -14,19 +15,17 @@ const Header = ({ session }: { session: Session }) => {
         </p>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* <p>Search</p> */}
-
-        {/* Logout (server action) */}
-        <form action={logout}>
-          <button
-            type="submit"
-            className="rounded-md px-3 py-2 text-sm font-medium text-dark-400 hover:bg-slate-100"
-          >
-            Logout
-          </button>
-        </form>
-      </div>
+      {/* Logout (server action) */}
+      <form action={logout} className="flex justify-end">
+        <Button
+          type="submit"
+          variant="outline"
+          className="gap-2 border-light-400 bg-white text-dark-400 hover:bg-light-300"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </form>
     </header>
   );
 };

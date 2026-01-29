@@ -31,7 +31,7 @@ const BookCover = ({
       className={cn(
         "relative transition-all  duration-300",
         variantStyles[variant],
-        className
+        className,
       )}
     >
       <BookCoverSvg coverColor={coverColor} />
